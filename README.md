@@ -147,8 +147,8 @@ model.fit(
 )
 
 # get inferred model and intervention parameters
-params = model.theta
-intv_params = model.phi
+params = model.param
+intv_params = model.intv_param
 ```
 
 
