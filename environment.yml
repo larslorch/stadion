@@ -1,0 +1,10 @@
+name: stadion
+channels:
+- conda-forge
+- defaults
+dependencies:
+- conda
+- python=3.10.6
+- pip
+- pip:
+  - -r ./requirements.txt

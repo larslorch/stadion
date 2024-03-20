@@ -1,0 +1,27 @@
+---
+n_datasets: 50
+
+n_vars: 20
+n_samples: 1000
+
+edges_per_var: 3
+
+id: synth-scm-linear
+graph: erdos_renyi
+
+# model
+minval: 1.0
+maxval: 3.0
+maxbias: 3.0
+minscale_log: -1.0
+maxscale_log: 1.0
+adjust: eigen
+adjust_eps: 0.5
+
+# interventions
+n_intv_train: 10
+n_intv_test: 10
+intvs_per_env: 1
+intv_shift_min: 5.0
+intv_shift_max: 15.0
+intv_scale: false

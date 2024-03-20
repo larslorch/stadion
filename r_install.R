@@ -1,0 +1,6 @@
+install.packages(c("docopt", "BiocManager"))
+BiocManager::install(c("graph", "RBGL", "ggm", "Rgraphviz"), quiet=TRUE, update=TRUE, ask=FALSE)
+install.packages(c("MASS", "momentchi2", "pcalg", "kpcalg"), dependencies=TRUE, quiet=TRUE)
+install.packages("remotes", dependencies=TRUE)
+library(remotes)
+install_github("Diviyan-Kalainathan/RCIT")

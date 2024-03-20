@@ -1,0 +1,32 @@
+---
+n_datasets: 50
+
+n_vars: 20
+n_samples: 1000
+
+edges_per_var: 3
+
+id: sergio
+graph: scale_free_acyclic
+
+# interventions
+n_intv_train: 10
+n_intv_test: 10
+intvs_per_env: 1
+knockdown_min: 2.0
+knockdown_max: 10.0
+
+coop: false
+
+# simulator
+k_min: 1.0
+k_max: 5.0
+b_min: 1.0
+b_max: 4.0
+n_unique_mr: 10
+hill: 2.0
+decays: 0.5
+noise_params: 0.5
+noise_type: 'dpd'
+sampling_state: 100
+dt: 0.003
