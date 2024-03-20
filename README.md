@@ -157,7 +157,8 @@ intv_params = model.phi
 The latest release is published on PyPI, 
 so the best way to install `stadion` is using `pip`
 as explained above.
-For custom installations, we recommend using `conda` and generating a new environment via `environment.yml`.
+For custom installations, we recommend using `conda` and generating a new environment 
+via `conda env create --file environment.yaml`.
 
 The repository consists of two branches:
 - `main` (recommended): Lightweight and easy-to-use package for using `stadion` in your research or applications.
