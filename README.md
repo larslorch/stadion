@@ -79,7 +79,7 @@ and implement the methods decorated with `@abstractmethod`.
 The `stadion` package provides the KDS as an 
 off-the-shelf loss function.
 In the below, we define custom SDE functions `f` and `sigma`
-and a kernel `k` and use `kde_loss` to create the
+and a kernel `k` and use [`kds_loss`](stadion/kds.py) to create the
 corresponding loss function and its parameter gradient.
 This may be useful when using the KDS loss in
 custom implementations that do not subclass from 
@@ -147,8 +147,8 @@ model.fit(
 )
 
 # get inferred model and intervention parameters
-params = model.theta
-intv_params = model.phi
+params = model.param
+intv_params = model.intv_param
 ```
 
 
