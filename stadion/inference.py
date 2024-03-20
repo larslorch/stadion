@@ -168,7 +168,7 @@ class KDSMixin(SDE, ABC):
                 multiple datasets
                 with different numbers of samples.
             targets (ndarray, optional): Known intervention targets provided
-                as a multi-hot indicator vector and aligned with input ``x``
+                as a binary, multi-hot indicator vector and aligned with input ``x``
                 of the form: ndarray of shape ``[d,]`` encoding which
                 variables were intervened upon, ndarray of shape ``[m, d]``
                 encoding which variables were intervened upon in each
@@ -176,9 +176,9 @@ class KDSMixin(SDE, ABC):
                 ``[d]``. When ``None`` and providing a single dataset in
                 ``x``, defaults to no variables being intervened upon,
                 so ``intv[...] == 0`` (in causality terms, the observational
-                setting), When ``None`` and providing multiple datasets
+                setting). When ``None`` and providing multiple datasets
                 in ``x``, defaults to the first environment being
-                observational and all other environments having unknonw
+                observational and all other environments having unknown
                 targets, so ``intv[0, :] == 0`` and ``intv[1:, :] == 1``.
             bandwidth (float, optional): Bandwidth of the RBF kernel.
             estimator (str, optional): Estimator for the KDS loss. Options:

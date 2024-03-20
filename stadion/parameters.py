@@ -124,12 +124,12 @@ class InterventionParameters(Parameters):
     Args:
         parameters: dictionary of parameters to be stored. The parameters
             will be masked at initialization based on the targets if provided.
-        targets (ndarray, optional): binary array of shape ``[d]`` or ``[n_envs, d]``
-            indicating which variables are intervened upon. If provided, intervention
-            parameters are automatically masked by `mask_value` on the axis `targets_axis`
-            when a variable is not targeted. If an environment axis is provided,
-            it is assumed that the intervention parameters have leading axis `n_envs`.
-            Defaults to ``None``.
+        targets (ndarray, optional): binary, multi-hot indicator array of shape ``[d]``
+            or ``[n_envs, d]`` indicating which variables are intervened upon.
+            If provided, intervention parameters are automatically masked by
+            `mask_value` on the axis `targets_axis` whenever a variable is not
+            targeted. If an environment axis is provided, it is assumed that
+            the intervention parameters have leading axis `n_envs`. Defaults to ``None``.
         targets_axis (int, optional): axis along which the targets are broadcasted.
             Defaults to ``0``. Can be a dictionary matching the structure
             of the intervention parameters, in which case the targets are broadcasted
