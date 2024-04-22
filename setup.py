@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name='stadion',
-    version='1.0.0',
+    version='1.0.1',
     description='Causal Modeling with Stationary Diffusions',
     author='Lars Lorch',
     author_email='lars.lorch@inf.ethz.ch',

@@ -137,9 +137,11 @@ class KDSMixin(SDE, ABC):
             assert all([targets_.shape[0] == n_vars for targets_ in targets]), "Intervention masks have to have same number "\
                                                                       "of variables and match datasets."
 
+        elif n_envs == 1:
+            targets = [onp.zeros(n_vars, dtype=onp.int32)]
+
         else:
-            targets = [onp.zeros(n_vars, dtype=onp.int32) if j == 0 else onp.ones(n_vars, dtype=onp.int32)
-                    for j in range(len(x))]
+            raise ValueError("Intervention targets have to be provided for multiple datasets.")
 
         return x, targets, n_envs, n_vars
 
@@ -177,9 +179,13 @@ class KDSMixin(SDE, ABC):
                 ``x``, defaults to no variables being intervened upon,
                 so ``targets[...] == 0`` (in causality terms, the observational
                 setting). When ``None`` and providing multiple datasets
-                in ``x``, defaults to the first environment being
-                observational and all other environments having unknown
-                targets, so ``targets[0, :] == 0`` and ``targets[1:, :] == 1``.
+                in ``x``, raises an Exception: we currently enforce
+                the targets of interventional datasets to be known,
+                since we have not yet tested the performance when not knowing
+                the targets. To explicitly allow 'unknown' targets for the
+                interventional datasets, you can provide ``targets[0, :] == 0``
+                and ``targets[1:, :] == 1``, which does not mask the
+                intervention parameters for any variables.
             bandwidth (float, optional): Bandwidth of the RBF kernel.
             estimator (str, optional): Estimator for the KDS loss. Options:
                 ``u-statistic``, ``v-statistic``, ``linear`` (Default:
