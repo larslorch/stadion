@@ -12,21 +12,24 @@ pip install stadion
 The `stadion` package allows learning **stationary** systems of
 **stochastic differential equations (SDEs)**, whose stationary densities
 match the empirical distribution of a target dataset.
-The target dataset contains i.i.d. samples from the stationary
-density, not a time series.
+The target dataset for learning the SDEs
+contains i.i.d. samples from the stationary density, 
+not a time series.
 When provided with [several datasets](#multiple-interventional-datasets) 
 (e.g., from different experimental conditions),
 the algorithm learns one SDE model that fits all observed distributions
 using jointly-learned intervention parameters that perturb 
-the SDE model.
+the SDE model. 
 
 
 The objective for learning the SDE parameters is the 
 **kernel deviation from stationarity (KDS)**.
 The KDS depends on the SDEs and a kernel function, and 
 its sample approximation is computed using only the target dataset. 
-Optimizing the KDS does not require rolling-out trajectories 
+Hence, optimizing the KDS does not require rolling-out trajectories 
 from the SDE model or backpropagating gradients through time.
+The SDE drift and diffusion functions can 
+be arbitrary **nonlinear**, differentiable functions.
 This package also provides the KDS as a stand-alone [loss function](#kds-loss-function).
 
 Our implementation leverages efficient vectorization, auto-diff, 
@@ -63,12 +66,14 @@ key, subk = random.split(key)
 x_pred = model.sample(subk, 100)
 params = model.param
 ```
-Currently, the following SDE model classes are implemented in `stadion.models`:
+Currently, the following SDE model classes are implemented in `stadion.models`.
+The `MLPSDE` model is a generalization of the `LinearSDE` model to
+nonlinear drift functions:
 
 - [`LinearSDE`](stadion/models/linear.py)
 - [`MLPSDE`](stadion/models/mlp.py)
 
-To support the above functionality, new model classes have to inherit from
+To support the above inference functionality, new model classes have to inherit from
 [`SDE`](stadion/sde.py) and [`KDSMixin`](stadion/inference.py)
 and implement the methods decorated with `@abstractmethod`.
 
@@ -84,6 +89,8 @@ corresponding loss function and its parameter gradient.
 This may be useful when using the KDS loss in
 custom implementations that do not subclass from 
 [`SDE`](stadion/sde.py) and [`KDSMixin`](stadion/inference.py).
+Here, `f` and `sigma` can be arbitrary differentiable, possibly
+nonlinear, functions.
 
 
 ```python
@@ -93,24 +100,24 @@ from jax import numpy as jnp, value_and_grad
 from stadion import kds_loss
 
 # SDE functions
-f = lambda x, _param: _param["w"] @ x + _param["b"]
-sigma = lambda x, _param: jnp.exp(_param["c"]) * jnp.eye(d)
+f = lambda x, param: param["w"] @ x + param["b"]
+sigma = lambda x, param: jnp.exp(param["c"]) * jnp.eye(d)
 
 # kernel
 k = lambda x, y: jnp.exp(- jnp.square(x - y).sum(-1) / 100)
 
 # create KDS loss function
-loss_fun = kds_loss(f, sigma, k, estimator="linear")
+loss_fun = kds_loss(f, sigma, k)
 
 # compute loss and parameter gradient for dataset and a parameter setting
 key, *subk = random.split(key, 4)
-param = {
+p = {
     "w": random.normal(subk[0], shape=(d, d)),
     "b": random.normal(subk[1], shape=(d,)),
     "c": random.normal(subk[2], shape=(d,)),
 }
 
-loss, dparam = value_and_grad(loss_fun, argnums=1)(data, param)
+loss, dparam = value_and_grad(loss_fun, argnums=1)(data, p)
 ```
 
 ### Multiple Interventional Datasets
@@ -168,10 +175,12 @@ The purpose of this branch is reproducibility; the branch is not updated anymore
 ## Reference
 
 ```
-@article{lorch2023causal,
+@inproceedings{lorch2024causal,
   title={Causal Modeling with Stationary Diffusions},
   author={Lorch, Lars and Krause, Andreas and Sch{\"o}lkopf, Bernhard},
-  journal={arXiv preprint arXiv:2310.17405},
-  year={2023}
+  booktitle={International Conference on Artificial Intelligence and Statistics},
+  pages={1927--1935},
+  year={2024},
+  organization={PMLR}
 }
 ```
