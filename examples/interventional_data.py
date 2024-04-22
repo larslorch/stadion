@@ -39,3 +39,10 @@ if __name__ == "__main__":
     pprint(param)
     pprint(intv_param)
 
+    # sample from model under intervention parameters learned for 1st environment
+    intv_param_a = intv_param.index_at(1)
+    x_pred_a = model.sample(subk, 1000, intv_param=intv_param_a)
+
+    print("Means of observed and generated data under 1st intervention: ")
+    print(data_a.mean(0))
+    print(x_pred_a.mean(0))

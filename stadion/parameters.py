@@ -8,6 +8,15 @@ import jax.numpy as jnp
 from jax.tree_util import register_pytree_node_class
 
 
+__AUX_FIELDS__ = [
+    "_fixed",
+    "_fixed_values",
+    "targets",
+    "_targets_axis",
+    "_mask_value"
+]
+
+
 class Parameters(ABC):
     def __init__(self, parameters):
         self._store = parameters
@@ -21,6 +30,29 @@ class Parameters(ABC):
     def __setitem__(self, key, value):
         return self._store.__setitem__(key, value)
 
+    def index_at(self, index):
+        """
+        Indexing helper for subsetting the parameter tree.
+
+        Args:
+            index (Any): index to subset the parameter tree with
+
+        Returns:
+            Parameters: subset of the original parameter tree, where all leaves and
+                auxiliary arrays (e.g. `targets`) are indexed by `index`.
+        """
+        def index_fn(leaf):
+            if isinstance(leaf, jnp.ndarray):
+                return leaf[index]
+            return leaf
+
+        obj = copy.copy(self) # leaves the original object unchanged, no deepcopy because causes errors in tree_map
+        obj._store = jax.tree_map(index_fn, obj._store)
+        for elem in __AUX_FIELDS__:
+            if hasattr(self, elem):
+                setattr(obj, elem, jax.tree_map(index_fn, getattr(self, elem)))
+        return obj
+
     @abstractmethod
     def _mask(self, tree, grad=False):
         pass
@@ -33,32 +65,18 @@ class Parameters(ABC):
     def tree_flatten(self):
         vals, treedef = jax.tree_util.tree_flatten(self._store)
         aux_data = dict(treedef=treedef)
-        if hasattr(self, "_fixed"):
-            aux_data["_fixed"] = self._fixed
-        if hasattr(self, "_fixed_values"):
-            aux_data["_fixed_values"] = self._fixed_values
-        if hasattr(self, "targets"):
-            aux_data["targets"] = self.targets
-        if hasattr(self, "_targets_axis"):
-            aux_data["_targets_axis"] = self._targets_axis
-        if hasattr(self, "_mask_value"):
-            aux_data["_mask_value"] = self._mask_value
+        for elem in __AUX_FIELDS__:
+            if hasattr(self, elem):
+                aux_data[elem] = getattr(self, elem)
         return vals, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, vals):
         obj = object.__new__(cls)
         obj._store = jax.tree_util.tree_unflatten(aux_data["treedef"], vals)
-        if "_fixed" in aux_data:
-            obj._fixed = aux_data["_fixed"]
-        if "_fixed_values" in aux_data:
-            obj._fixed_values = aux_data["_fixed_values"]
-        if "targets" in aux_data:
-            obj.targets = aux_data["targets"]
-        if "_targets_axis" in aux_data:
-            obj._targets_axis = aux_data["_targets_axis"]
-        if "_mask_value" in aux_data:
-            obj._mask_value = aux_data["_mask_value"]
+        for elem in __AUX_FIELDS__:
+            if elem in aux_data:
+                setattr(obj, elem, aux_data[elem])
         return obj
 
 

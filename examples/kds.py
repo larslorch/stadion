@@ -16,8 +16,8 @@ if __name__ == "__main__":
     data = random.normal(subk, shape=(n, d)) @ w
 
     # define SDE functions
-    f = lambda x, p: p["w"] @ x + p["b"]
-    sigma = lambda x, p: jnp.exp(p["c"]) * jnp.eye(d)
+    f = lambda x, param: param["w"] @ x + param["b"]
+    sigma = lambda x, param: jnp.exp(param["c"]) * jnp.eye(d)
 
     # define kernel
     kernel = lambda x, y: jnp.exp(- jnp.square(x - y).sum(-1) / 100)
@@ -27,15 +27,15 @@ if __name__ == "__main__":
 
     # compute loss and parameter gradient for dataset at a parameter setting
     key, *subk = random.split(key, 4)
-    param = {
+    p = {
         "w": random.normal(subk[0], shape=(d, d)),
         "b": random.normal(subk[1], shape=(d,)),
         "c": random.normal(subk[2], shape=(d,)),
     }
 
-    loss, dparam = value_and_grad(loss_fun, argnums=1)(data, param)
+    loss, dp = value_and_grad(loss_fun, argnums=1)(data, p)
 
     print("Loss")
     print(loss)
     print("Parameter gradient")
-    pprint(dparam)
+    pprint(dp)

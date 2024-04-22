@@ -154,8 +154,12 @@ model.fit(
 )
 
 # get inferred model and intervention parameters
-params = model.param
-intv_params = model.intv_param
+param = model.param
+intv_param = model.intv_param
+
+# sample from model under intervention parameters learned for 1st environment
+intv_param_a = intv_param.index_at(1)
+x_pred_a = model.sample(subk, 1000, intv_param=intv_param_a)
 ```
 
 
