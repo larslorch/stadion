@@ -60,7 +60,7 @@ class MLPSDE(KDSMixin, SDE):
         self.init_mode = init_mode
 
 
-    def init_param(self, key, d, scale=0.001, fix_speed_scaling=True):
+    def init_param(self, key, d, scale=1e-6, fix_speed_scaling=True):
         """
         Samples random initialization of the SDE model parameters.
         See :func:`~stadion.inference.KDSMixin.init_param`.
@@ -72,7 +72,7 @@ class MLPSDE(KDSMixin, SDE):
             "mlp_1": jnp.zeros((d, self.hidden_size)),
             "mlp_b_1": jnp.zeros((d,)),
             "log_reversion": jnp.zeros((d,)),
-            "log_noise_scale": jnp.zeros((d,)),
+            "log_noise_scale": -2 * jnp.ones((d,)),
         }
 
         _initializer = functools.partial(tree_variance_initialization, scale=scale, mode=self.init_mode,
@@ -94,7 +94,7 @@ class MLPSDE(KDSMixin, SDE):
 
 
 
-    def init_intv_param(self, key, d, n_envs=None, scale=0.001, targets=None, x=None):
+    def init_intv_param(self, key, d, n_envs=None, scale=1e-6, targets=None, x=None):
         """
         Samples random initialization of the intervention parameters.
         See :func:`~stadion.inference.KDSMixin.init_intv_param`.

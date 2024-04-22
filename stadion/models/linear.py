@@ -36,7 +36,7 @@ class LinearSDE(KDSMixin, SDE):
         self.sparsity_regularizer = sparsity_regularizer
 
 
-    def init_param(self, key, d, scale=0.001, fix_speed_scaling=True):
+    def init_param(self, key, d, scale=1e-6, fix_speed_scaling=True):
         """
         Samples random initialization of the SDE model parameters.
         See :func:`~stadion.inference.KDSMixin.init_param`.
@@ -44,7 +44,7 @@ class LinearSDE(KDSMixin, SDE):
         shape = {
             "weights": jnp.zeros((d, d)),
             "biases": jnp.zeros((d,)),
-            "log_noise_scale": jnp.zeros((d,)),
+            "log_noise_scale": -2 * jnp.ones((d,)),
         }
         param = tree_init_normal(key, shape, scale=scale)
 
@@ -60,7 +60,7 @@ class LinearSDE(KDSMixin, SDE):
             )
 
 
-    def init_intv_param(self, key, d, n_envs=None, scale=0.001, targets=None, x=None):
+    def init_intv_param(self, key, d, n_envs=None, scale=1e-6, targets=None, x=None):
         """
         Samples random initialization of the intervention parameters.
         See :func:`~stadion.inference.KDSMixin.init_intv_param`.

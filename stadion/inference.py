@@ -59,7 +59,7 @@ class KDSMixin(SDE, ABC):
     """
 
     @abstractmethod
-    def init_param(self, key, d, *, scale=0.001, fix_speed_scaling=True):
+    def init_param(self, key, d, *, scale=1e-6, fix_speed_scaling=True):
         """
         Samples random initialization of the SDE model parameters
 
@@ -78,12 +78,12 @@ class KDSMixin(SDE, ABC):
 
 
     @abstractmethod
-    def init_intv_param(self, key, d, *, n_envs=None, scale=0.001, targets=None, x=None):
+    def init_intv_param(self, key, d, *, n_envs=None, scale=1e-6, targets=None, x=None):
         """
         Samples random initialization of the intervention parameters.
-        If intervened variables are known and provided via ``intv``, the modeled interventions are restricted
-        to variables where ``intv[j] == 1``.
-        If both ``intv`` and ``x`` are provided, the intervention shifts on the known target variables
+        If intervened variables are known and provided via ``targets``, the modeled interventions are restricted
+        to variables where ``targets[j] == 1``.
+        If both ``targets`` and ``x`` are provided, the intervention shifts on the known target variables
         are warm-startedbased on the mean shift from the first dataset (which is assumed to be observational data).
 
         Args:
@@ -91,8 +91,8 @@ class KDSMixin(SDE, ABC):
             d (optional): number of variables
             n_envs (int, optional): number of environments. When provided, PyTree has additional leading axis of `n_envs`.
             scale (float, optional): scale of random values sampled
-            x (Dataset, optional): Datasets to warm-start parameters. Both ``x`` and ``intv`` have to be provided.
-            targets (ndarray, optional): Intervention mask(s) to warm-start parameters. Both ``x`` and ``intv`` have to be provided.
+            x (Dataset, optional): Datasets to warm-start parameters. Both ``x`` and ``targets`` have to be provided.
+            targets (ndarray, optional): Intervention mask(s) to warm-start parameters. Both ``x`` and ``targets`` have to be provided.
 
         Returns:
             :class:`~stadion.parameters.InterventionParameters`
@@ -116,7 +116,7 @@ class KDSMixin(SDE, ABC):
 
 
     @staticmethod
-    def _format_input_data(x, intv):
+    def _format_input_data(x, targets):
         if isinstance(x, (onp.ndarray, jnp.ndarray)) and x.ndim == 2:
             x = [x]
 
@@ -127,21 +127,21 @@ class KDSMixin(SDE, ABC):
         assert all([x_.ndim == 2 for x_ in x]), "All datasets have to be 2D arrays."
         assert all([x_.shape[-1] == n_vars for x_ in x]), "All datasets have to have same number of variables."
 
-        if intv is not None:
-            if isinstance(intv, (onp.ndarray, jnp.ndarray)) and intv.ndim == 1:
-                intv = [intv]
+        if targets is not None:
+            if isinstance(targets, (onp.ndarray, jnp.ndarray)) and targets.ndim == 1:
+                targets = [targets]
 
-            intv = [onp.array(intv_) for intv_ in intv]
-            assert len(intv) == n_envs, "Number of intervention masks has to match number of datasets."
-            assert all([intv_.ndim == 1 for intv_ in intv]), "All intervention masks have to be 1D arrays."
-            assert all([intv_.shape[0] == n_vars for intv_ in intv]), "Intervention masks have to have same number "\
+            targets = [onp.array(targets_) for targets_ in targets]
+            assert len(targets) == n_envs, "Number of intervention masks has to match number of datasets."
+            assert all([targets_.ndim == 1 for targets_ in targets]), "All intervention masks have to be 1D arrays."
+            assert all([targets_.shape[0] == n_vars for targets_ in targets]), "Intervention masks have to have same number "\
                                                                       "of variables and match datasets."
 
         else:
-            intv = [onp.zeros(n_vars, dtype=onp.int32) if j == 0 else onp.ones(n_vars, dtype=onp.int32)
+            targets = [onp.zeros(n_vars, dtype=onp.int32) if j == 0 else onp.ones(n_vars, dtype=onp.int32)
                     for j in range(len(x))]
 
-        return x, intv, n_envs, n_vars
+        return x, targets, n_envs, n_vars
 
 
     def fit(
@@ -175,11 +175,11 @@ class KDSMixin(SDE, ABC):
                 environment, or list of length ``m` of ndarrays of shape
                 ``[d]``. When ``None`` and providing a single dataset in
                 ``x``, defaults to no variables being intervened upon,
-                so ``intv[...] == 0`` (in causality terms, the observational
+                so ``targets[...] == 0`` (in causality terms, the observational
                 setting). When ``None`` and providing multiple datasets
                 in ``x``, defaults to the first environment being
                 observational and all other environments having unknown
-                targets, so ``intv[0, :] == 0`` and ``intv[1:, :] == 1``.
+                targets, so ``targets[0, :] == 0`` and ``targets[1:, :] == 1``.
             bandwidth (float, optional): Bandwidth of the RBF kernel.
             estimator (str, optional): Estimator for the KDS loss. Options:
                 ``u-statistic``, ``v-statistic``, ``linear`` (Default:
@@ -196,7 +196,7 @@ class KDSMixin(SDE, ABC):
                 method :func:`~stadion.inference.KDSMixin.regularize_sparsity`.
             warm_start_intv (bool, optional): Whether to warm-start the
                 intervention parameters based on provided data ``x`` and
-                targets ``intv``
+                targets ``targets``
             verbose (int, optional): Print log ``verbose`` number of times
                 during gradient descent.
 
@@ -204,7 +204,7 @@ class KDSMixin(SDE, ABC):
             ``self``
         """
 
-        # convert x and intv into the same format
+        # convert x and targets into the same format
         x, targets, n_envs, self.n_vars = KDSMixin._format_input_data(x, targets)
 
         # set up device sharding
