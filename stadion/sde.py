@@ -121,7 +121,7 @@ class SDE(ABC):
         pass
 
 
-    @functools.partial(jax.jit, static_argnums=(0, 4))
+    @functools.partial(jax.jit, static_argnums=(0, 3, 4))
     def _simulate_dynamical_system(
         self,
         key,
