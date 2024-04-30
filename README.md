@@ -85,7 +85,7 @@ The `stadion` package provides the KDS as an
 off-the-shelf loss function.
 In the below, we define custom SDE functions `f` and `sigma`
 and a kernel `k` and use [`kds_loss`](stadion/kds.py) to create the
-corresponding loss function and its parameter gradient.
+corresponding loss function and its gradient with respect to the parameters of `f` and `sigma`.
 This may be useful when using the KDS loss in
 custom implementations that do not subclass from 
 [`SDE`](stadion/sde.py) and [`KDSMixin`](stadion/inference.py).
