@@ -15,6 +15,8 @@ match the empirical distribution of a target dataset.
 The target dataset for learning the SDEs
 contains i.i.d. samples from the stationary density, 
 not a time series.
+Put differently, we perform system identification 
+from the stationary distribution.
 When provided with [several datasets](#multiple-interventional-datasets) 
 (e.g., from different experimental conditions),
 the algorithm learns one SDE model that fits all observed distributions
@@ -29,7 +31,7 @@ its sample approximation is computed using only the target dataset.
 Hence, optimizing the KDS does not require rolling-out trajectories 
 from the SDE model or backpropagating gradients through time.
 The SDE drift and diffusion functions can 
-be arbitrary **nonlinear**, differentiable functions.
+be **arbitrary nonlinear, differentiable functions**.
 This package also provides the KDS as a stand-alone [loss function](#kds-loss-function).
 
 Our implementation leverages efficient vectorization, auto-diff, 
@@ -66,16 +68,18 @@ key, subk = random.split(key)
 x_pred = model.sample(subk, 100)
 params = model.param
 ```
-Currently, the following SDE model classes are implemented in `stadion.models`.
-The `MLPSDE` model is a generalization of the `LinearSDE` model to
-nonlinear drift functions:
+Currently, the following SDE model classes are implemented in `stadion.models`:
 
 - [`LinearSDE`](stadion/models/linear.py)
 - [`MLPSDE`](stadion/models/mlp.py)
 
-To support the above inference functionality, new model classes have to inherit from
+The `MLPSDE` model is a generalization of the `LinearSDE` model to
+nonlinear drift functions.
+o support the inference functionality in the code snippet above, 
+new model classes have to inherit from
 [`SDE`](stadion/sde.py) and [`KDSMixin`](stadion/inference.py)
-and implement the methods decorated with `@abstractmethod`.
+and implement the methods decorated with `@abstractmethod`
+like `LinearSDE` and `MLPSDE`.
 
 ## Additional Examples
 
@@ -100,24 +104,28 @@ from jax import numpy as jnp, value_and_grad
 from stadion import kds_loss
 
 # SDE functions
-f = lambda x, param: param["w"] @ x + param["b"]
-sigma = lambda x, param: jnp.exp(param["c"]) * jnp.eye(d)
+def f(x, param):
+    return param["w"] @ x + param["b"]
+
+def sigma(x, param):
+    return jnp.exp(param["c"]) * jnp.eye(d)
 
 # kernel
-k = lambda x, y: jnp.exp(- jnp.square(x - y).sum(-1) / 100)
+def k(x, y):
+    return jnp.exp(- jnp.square(x - y).sum(-1) / 100)
 
 # create KDS loss function
 loss_fun = kds_loss(f, sigma, k)
 
 # compute loss and parameter gradient for dataset and a parameter setting
 key, *subk = random.split(key, 4)
-p = {
+params = {
     "w": random.normal(subk[0], shape=(d, d)),
     "b": random.normal(subk[1], shape=(d,)),
     "c": random.normal(subk[2], shape=(d,)),
 }
 
-loss, dparam = value_and_grad(loss_fun, argnums=1)(data, p)
+loss, dparams = value_and_grad(loss_fun, argnums=1)(data, params)
 ```
 
 ### Multiple Interventional Datasets
@@ -159,7 +167,7 @@ intv_param = model.intv_param
 
 # sample from model under intervention parameters learned for 1st environment
 intv_param_a = intv_param.index_at(1)
-x_pred_a = model.sample(subk, 1000, intv_param=intv_param_a)
+x_pred_a = model.sample(subk, 100, intv_param=intv_param_a)
 ```
 
 
