@@ -158,6 +158,7 @@ class KDSMixin(SDE, ABC):
         batch_size=128,
         reg=0.001,
         warm_start_intv=True,
+        device=None,
         verbose=10,
     ):
         """
@@ -203,6 +204,8 @@ class KDSMixin(SDE, ABC):
             warm_start_intv (bool, optional): Whether to warm-start the
                 intervention parameters based on provided data ``x`` and
                 targets ``targets``
+            device (device, optional): Device to run the optimization on.
+                Currently only supports single device.
             verbose (int, optional): Print log ``verbose`` number of times
                 during gradient descent.
 
@@ -213,10 +216,11 @@ class KDSMixin(SDE, ABC):
         # convert x and targets into the same format
         x, targets, n_envs, self.n_vars = KDSMixin._format_input_data(x, targets)
 
-        # set up device sharding
-        device_count = jax.device_count()
-        devices = jax.devices()
-        mesh = mesh_utils.create_device_mesh((device_count,), devices)
+        # set up device sharding (currently only supports single device)
+        if device is None:
+            device = jax.devices(device)[0]
+
+        mesh = mesh_utils.create_device_mesh((1,), [device])
         sharding = PositionalSharding(mesh)
 
         # initialize parameters and load to device (replicate across devices)
@@ -225,10 +229,7 @@ class KDSMixin(SDE, ABC):
 
         key, subk = random.split(key)
         intv_param = self.init_intv_param(subk, self.n_vars, n_envs=n_envs, targets=targets,
-                            x=x if warm_start_intv else None)
-
-        param = jax.device_put(param, sharding.replicate())
-        intv_param = jax.device_put(intv_param, sharding.replicate())
+                                          x=x if warm_start_intv else None)
 
         # init dataloader
         key, subk = random.split(key)

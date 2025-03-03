@@ -32,7 +32,7 @@ class Batch(NamedTuple):
         Multi-device parallelism currently not optimized, so we just replicate all datapoints across devices.
         """
         return dict(
-            x=sharding.replicate(),
+            x=sharding.reshape(onp.prod(sharding.shape), 1).replicate(),
             env_indicator=sharding.replicate(),
         )
 
